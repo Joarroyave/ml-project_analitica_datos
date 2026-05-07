@@ -656,7 +656,7 @@ elif seccion == "Análisis de residuos":
         """
     )
 
-    st.markdown("### Residuos vs predicciones")
+    st.markdown("### Residuos")
 
     fig, ax = plt.subplots(figsize=(7, 5))
 
@@ -665,7 +665,7 @@ elif seccion == "Análisis de residuos":
 
     ax.set_xlabel("Predicciones")
     ax.set_ylabel("Residuos")
-    ax.set_title("Residuos vs predicciones")
+    ax.set_title("Residuos")
 
     st.pyplot(fig)
 
@@ -771,27 +771,127 @@ elif seccion == "Predicción interactiva":
 
 elif seccion == "Conclusiones":
 
-    st.header("Conclusiones")
+    st.header("Conclusiones del análisis")
+
+    # Identificar nombre del modelo final cargado
+    nombre_estimador = model.named_steps["model"].__class__.__name__
+
+    if nombre_estimador == "LGBMRegressor":
+        nombre_modelo_final = "LightGBM ajustado"
+    elif nombre_estimador == "RandomForestRegressor":
+        nombre_modelo_final = "Random Forest ajustado"
+    elif nombre_estimador == "Ridge":
+        nombre_modelo_final = "Ridge ajustado"
+    else:
+        nombre_modelo_final = nombre_estimador
+
+    st.markdown("### Modelo final seleccionado")
+
+    st.success(f"El modelo final seleccionado fue: **{nombre_modelo_final}**")
 
     st.write(
         """
-        En este laboratorio se desarrolló un pipeline completo para un problema de regresión.
-
-        Se compararon múltiples modelos mediante validación cruzada, se ajustaron
-        hiperparámetros, se evaluó el mejor modelo en test y se analizó la interpretabilidad
-        y los residuos.
+        Después de comparar diferentes modelos de regresión mediante validación cruzada,
+        se observó que los modelos basados en árboles y boosting tuvieron un mejor desempeño
+        que los modelos lineales simples.
         """
     )
-
-    st.markdown("### Archivos generados")
 
     st.write(
         """
-        - `models/model_regression.joblib`: contiene el modelo final entrenado.
-        - `models/features_regression.joblib`: contiene la lista de variables predictoras utilizadas.
+        En particular, LightGBM mostró un desempeño competitivo desde la comparación inicial,
+        por lo que fue incluido en el ajuste de hiperparámetros. Esto fue coherente con los
+        resultados obtenidos, ya que este tipo de modelo puede capturar relaciones no lineales
+        e interacciones entre variables como edad, índice de masa corporal, condición de fumador
+        y región.
         """
     )
 
-    st.success(
-        "El modelo final quedó guardado correctamente y puede reutilizarse para hacer nuevas predicciones."
+    st.markdown("### Desempeño en el conjunto de prueba")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.metric("MAE en test", f"{test_mae:,.2f}")
+
+    with col2:
+        st.metric("RMSE en test", f"{test_rmse:,.2f}")
+
+    with col3:
+        st.metric("R² en test", f"{test_r2:.4f}")
+
+    st.write(
+        f"""
+        En el conjunto de prueba, el modelo alcanzó un **R² de {test_r2:.4f}**,
+        lo que indica que logra explicar aproximadamente el **{test_r2 * 100:.2f}%**
+        de la variabilidad de los cargos médicos en datos no vistos.
+        """
+    )
+
+    st.write(
+        f"""
+        El MAE indica que, en promedio, el modelo se equivoca aproximadamente en
+        **{test_mae:,.2f}** unidades monetarias. Por otro lado, el RMSE fue de
+        **{test_rmse:,.2f}**, lo que refleja el efecto de errores más grandes en algunas
+        predicciones.
+        """
+    )
+
+    st.markdown("### Hallazgos principales")
+
+    st.write(
+        """
+        A partir del análisis realizado se pueden destacar los siguientes hallazgos:
+        """
+    )
+
+    st.markdown(
+        """
+        - Los modelos lineales permiten una interpretación más directa, pero no fueron necesariamente los de mejor desempeño predictivo.
+        - Los modelos basados en árboles y boosting capturaron mejor la estructura de los datos.
+        - LightGBM fue relevante en el proceso porque presentó buen desempeño y fue ajustado mediante búsqueda de hiperparámetros.
+        - La variable objetivo `charges` presenta alta variabilidad, por lo que métricas como RMSE fueron importantes para penalizar errores grandes.
+        - La evaluación en test permitió verificar si el modelo generalizaba adecuadamente a datos que no participaron en el entrenamiento.
+        """
+    )
+
+    st.markdown("### Interpretabilidad")
+
+    st.write(
+        """
+        La interpretabilidad permitió identificar qué variables tuvieron mayor peso en la predicción
+        de los cargos médicos. En este tipo de problema, variables relacionadas con características
+        personales y de salud, como la condición de fumador, la edad y el índice de masa corporal,
+        pueden ser relevantes para explicar diferencias en los cargos médicos.
+        """
+    )
+
+    st.markdown("### Análisis de residuos")
+
+    st.write(
+        """
+        El análisis de residuos permitió revisar el comportamiento de los errores del modelo.
+        En problemas de costos médicos es común observar algunos errores altos, debido a la presencia
+        de personas con cargos médicos mucho más elevados que el resto.
+        """
+    )
+
+    st.write(
+        """
+        Aun así, la comparación entre validación cruzada y test permitió evaluar si el desempeño
+        del modelo era razonablemente estable y si no existía una pérdida fuerte de rendimiento
+        al pasar a datos no vistos.
+        """
+    )
+
+    st.markdown("### Conclusión general")
+
+    st.info(
+        """
+        En conclusión, el modelo final permitió construir una herramienta predictiva útil para estimar
+        cargos médicos a partir de características de personas aseguradas. Aunque el modelo no predice
+        perfectamente todos los casos, especialmente aquellos con cargos extremos, sí logra capturar
+        una parte importante del comportamiento de la variable objetivo y puede servir como apoyo para
+        análisis de riesgo, estimación de costos y toma de decisiones en contextos de seguros.
+        """
     )
